@@ -1,6 +1,6 @@
 # maxigo-bot Guide
 
-Gin-style bot framework for [Max messenger](https://max.ru). Router, middleware, context, groups — inspired by [Echo](https://echo.labstack.com) and [telebot](https://github.com/tucnak/telebot).
+Bot framework for [Max messenger](https://max.ru). Router, middleware, context, groups — inspired by [Echo](https://echo.labstack.com) and [telebot](https://github.com/tucnak/telebot).
 
 > **[Документация на русском](guide-ru.md)** | **[README](../README.md)**
 
@@ -535,7 +535,7 @@ func TestBot(t *testing.T) {
 | Package | Description |
 |---------|-------------|
 | [maxigo-client](https://github.com/maxigo-bot/maxigo-client) | Idiomatic Go HTTP client for Max Bot API (zero external deps) |
-| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Gin-style bot framework with router/middleware/context |
+| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Bot framework with router, middleware, and context |
 
 ## License
 

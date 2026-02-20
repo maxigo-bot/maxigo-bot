@@ -1,6 +1,6 @@
 # maxigo-bot
 
-Gin-style фреймворк для ботов [Max мессенджера](https://max.ru). Роутер, middleware, контекст, группы — вдохновлён [Echo](https://echo.labstack.com) и [telebot](https://github.com/tucnak/telebot).
+Фреймворк для ботов [Max мессенджера](https://max.ru). Роутер, middleware, контекст, группы — вдохновлён [Echo](https://echo.labstack.com) и [telebot](https://github.com/tucnak/telebot).
 
 > **[English Guide](guide.md)** | **[README](../README.md)**
 
@@ -535,7 +535,7 @@ func TestBot(t *testing.T) {
 | Пакет | Описание |
 |-------|----------|
 | [maxigo-client](https://github.com/maxigo-bot/maxigo-client) | Идиоматичный Go HTTP-клиент для Max Bot API (без внешних зависимостей) |
-| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Gin-style фреймворк для ботов с роутером/middleware/контекстом |
+| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Фреймворк для ботов с роутером, middleware и контекстом |
 
 ## Лицензия
 
