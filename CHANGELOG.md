@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.2.0] - 2026-02-21
+
+### Added
+- **Middleware package** (`middleware/`): built-in middleware with Echo-style Config pattern and Skipper support
+  - `Recover` / `RecoverWithConfig` — catches panics in handlers, converts to errors with optional stack trace
+  - `Logger` / `LoggerWithConfig` — logs update type, sender ID, chat ID, duration, and errors via customizable `LogFunc`
+  - `Whitelist` / `Blacklist` — filters updates by user ID (nil sender handling included)
+  - `AutoRespond` / `AutoRespondWithConfig` — automatically answers callback queries after handler completes
+- **`WithKeyboard`** send option — shorthand for sending inline keyboard buttons
+
 ## [v0.1.0] - 2026-02-20
 
 Initial public release.

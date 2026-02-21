@@ -7,7 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/maxigo-bot/maxigo-bot)](https://github.com/maxigo-bot/maxigo-bot)
 
-Bot framework for [Max messenger](https://max.ru). Router, middleware, context, groups — inspired by [Echo](https://echo.labstack.com) and [telebot](https://github.com/tucnak/telebot).
+Bot framework for [Max messenger](https://max.ru). Router, middleware, context, groups — inspired
+by [Echo](https://echo.labstack.com) and [telebot](https://github.com/tucnak/telebot).
 
 ## Documentation
 
@@ -68,9 +69,9 @@ func main() {
 Max uses `:` as command separator (not space like Telegram): `/start:payload`.
 
 ```go
-b.Handle("/start", func(c maxigobot.Context) error {
-    log.Printf("Command: %s, Payload: %s", c.Command(), c.Payload())
-    return c.Send("Welcome!")
+b.Handle("/start", func (c maxigobot.Context) error {
+log.Printf("Command: %s, Payload: %s", c.Command(), c.Payload())
+return c.Send("Welcome!")
 })
 
 b.Handle("/help", helpHandler)
@@ -79,24 +80,24 @@ b.Handle("/help", helpHandler)
 ### Events
 
 ```go
-b.Handle(maxigobot.OnText, textHandler)           // text messages (not commands)
+b.Handle(maxigobot.OnText, textHandler) // text messages (not commands)
 b.Handle(maxigobot.OnMessage, catchAllHandler)     // any message (fallback)
-b.Handle(maxigobot.OnBotStarted, startHandler)     // user pressed Start
-b.Handle(maxigobot.OnEdited, editedHandler)         // message edited
+b.Handle(maxigobot.OnBotStarted, startHandler) // user pressed Start
+b.Handle(maxigobot.OnEdited, editedHandler) // message edited
 ```
 
 ### Callbacks
 
 ```go
 // Exact payload match.
-b.Handle(maxigobot.OnCallback("confirm"), func(c maxigobot.Context) error {
-    return c.Respond("Confirmed!")
+b.Handle(maxigobot.OnCallback("confirm"), func (c maxigobot.Context) error {
+return c.Respond("Confirmed!")
 })
 
 // Catch-all callback handler.
-b.Handle(maxigobot.OnCallback(""), func(c maxigobot.Context) error {
-    log.Printf("Unknown callback: %s", c.Data())
-    return nil
+b.Handle(maxigobot.OnCallback(""), func (c maxigobot.Context) error {
+log.Printf("Unknown callback: %s", c.Data())
+return nil
 })
 ```
 
@@ -125,12 +126,12 @@ Update → Pre-middleware → Routing → Use-middleware → Group middleware �
 
 ```go
 func Logger() maxigobot.MiddlewareFunc {
-    return func(next maxigobot.HandlerFunc) maxigobot.HandlerFunc {
-        return func(c maxigobot.Context) error {
-            log.Printf("[%d] %s", c.Chat(), c.Text())
-            return next(c)
-        }
-    }
+return func (next maxigobot.HandlerFunc) maxigobot.HandlerFunc {
+return func (c maxigobot.Context) error {
+log.Printf("[%d] %s", c.Chat(), c.Text())
+return next(c)
+}
+}
 }
 ```
 
@@ -153,35 +154,35 @@ b.Handle("/help", helpHandler)
 `Context` provides access to the current update and bot API:
 
 ```go
-b.Handle("/info", func(c maxigobot.Context) error {
-    // Update data
-    sender := c.Sender()     // *maxigo.User
-    chatID := c.Chat()       // int64
-    msg := c.Message()       // *maxigo.Message
-    text := c.Text()         // full message text
-    cmd := c.Command()       // "info" (without "/")
-    payload := c.Payload()   // text after ":"
-    args := c.Args()         // payload split by whitespace
+b.Handle("/info", func (c maxigobot.Context) error {
+// Update data
+sender := c.Sender() // *maxigo.User
+chatID := c.Chat() // int64
+msg := c.Message() // *maxigo.Message
+text := c.Text()   // full message text
+cmd := c.Command() // "info" (without "/")
+payload := c.Payload() // text after ":"
+args := c.Args() // payload split by whitespace
 
-    // Sending
-    c.Send("text")                                // send to chat
-    c.Reply("text")                               // reply to message
-    c.Edit("new text")                            // edit current message
-    c.Delete()                                    // delete current message
+// Sending
+c.Send("text")  // send to chat
+c.Reply("text") // reply to message
+c.Edit("new text") // edit current message
+c.Delete() // delete current message
 
-    // Callbacks
-    c.Respond("notification")                     // answer callback
-    c.Data()                                      // callback payload
+// Callbacks
+c.Respond("notification") // answer callback
+c.Data() // callback payload
 
-    // Typing indicator
-    c.Notify(maxigo.ActionTyping)
+// Typing indicator
+c.Notify(maxigo.ActionTyping)
 
-    // Direct API access
-    c.API().GetChat(c.Ctx(), chatID)
+// Direct API access
+c.API().GetChat(c.Ctx(), chatID)
 
-    // Key-value store (thread-safe)
-    c.Set("user_role", "admin")
-    role := c.Get("user_role")
+// Key-value store (thread-safe)
+c.Set("user_role", "admin")
+role := c.Get("user_role")
 })
 ```
 
@@ -189,11 +190,11 @@ b.Handle("/info", func(c maxigobot.Context) error {
 
 ```go
 c.Send("hello",
-    maxigobot.WithReplyTo(messageID),
-    maxigobot.WithNotify(false),
-    maxigobot.WithFormat(maxigo.FormatMarkdown),
-    maxigobot.WithAttachments(maxigo.NewInlineKeyboardAttachment(buttons)),
-    maxigobot.WithDisableLinkPreview(),
+maxigobot.WithReplyTo(messageID),
+maxigobot.WithNotify(false),
+maxigobot.WithFormat(maxigo.FormatMarkdown),
+maxigobot.WithAttachments(maxigo.NewInlineKeyboardAttachment(buttons)),
+maxigobot.WithDisableLinkPreview(),
 )
 ```
 
@@ -211,7 +212,7 @@ c.Send("hello",
 | `OnBotRemoved`       | `bot_removed`          | Bot removed from chat       |
 | `OnUserAdded`        | `user_added`           | User added to chat          |
 | `OnUserRemoved`      | `user_removed`         | User removed from chat      |
-| `OnChatTitleChanged`  | `chat_title_changed`   | Chat title changed          |
+| `OnChatTitleChanged` | `chat_title_changed`   | Chat title changed          |
 | `OnChatCreated`      | `message_chat_created` | Chat created via button     |
 | `OnDialogMuted`      | `dialog_muted`         | User muted dialog           |
 | `OnDialogUnmuted`    | `dialog_unmuted`       | User unmuted dialog         |
@@ -223,10 +224,10 @@ c.Send("hello",
 
 ```go
 b, err := maxigobot.New("TOKEN",
-    maxigobot.WithLongPolling(30),                // long polling with 30s timeout
-    maxigobot.WithClient(preConfiguredClient),     // inject maxigo-client
-    maxigobot.WithUpdateTypes("message_created",   // filter update types
-        "message_callback"),
+maxigobot.WithLongPolling(30), // long polling with 30s timeout
+maxigobot.WithClient(preConfiguredClient),   // inject maxigo-client
+maxigobot.WithUpdateTypes("message_created", // filter update types
+"message_callback"),
 )
 ```
 
@@ -234,11 +235,11 @@ b, err := maxigobot.New("TOKEN",
 
 ```go
 // Global error handler.
-b.OnError = func(err error, c maxigobot.Context) {
-    log.Printf("Error: %v", err)
-    if c != nil {
-        c.Send("Something went wrong.")
-    }
+b.OnError = func (err error, c maxigobot.Context) {
+log.Printf("Error: %v", err)
+if c != nil {
+c.Send("Something went wrong.")
+}
 }
 ```
 
@@ -247,16 +248,44 @@ Bot errors can be unwrapped:
 ```go
 var botErr *maxigobot.BotError
 if errors.As(err, &botErr) {
-    log.Printf("Endpoint: %s, Err: %v", botErr.Endpoint, botErr.Err)
+log.Printf("Endpoint: %s, Err: %v", botErr.Endpoint, botErr.Err)
 }
 ```
 
+## Coming from Telebot?
+
+The API is intentionally familiar. You almost don't need to relearn anything:
+
+**Setup & Lifecycle**
+
+| Action     | Telebot v3                                                            | maxigo-bot                                            |
+|------------|-----------------------------------------------------------------------|-------------------------------------------------------|
+| Create bot | `tele.NewBot(tele.Settings{Token: t, Poller: &tele.LongPoller{...}})` | `maxigobot.New(token, maxigobot.WithLongPolling(30))` |
+| Start      | `b.Start()`                                                           | `b.Start()`                                           |
+| Stop       | `b.Stop()`                                                            | `b.Stop()`                                            |
+
+**Handlers**
+
+| Action     | Telebot v3                                      | maxigo-bot                                |
+|------------|-------------------------------------------------|-------------------------------------------|
+| Command    | `b.Handle("/start", h)`                         | `b.Handle("/start", h)`                   |
+| Text       | `b.Handle(tele.OnText, h)`                      | `b.Handle(maxigobot.OnText, h)`           |
+| Callback   | `b.Handle(&tele.InlineButton{Unique: "id"}, h)` | `b.Handle(maxigobot.OnCallback("id"), h)` |
+| Send       | `c.Send("text")`                                | `c.Send("text")`                          |
+| Reply      | `c.Reply("text")`                               | `c.Reply("text")`                         |
+| Edit       | `c.Edit("text")`                                | `c.Edit("text")`                          |
+| Delete     | `c.Delete()`                                    | `c.Delete()`                              |
+| Group      | `g := b.Group()`                                | `g := b.Group()`                          |
+| Middleware | `b.Use(mw)`                                     | `b.Use(mw)`                               |
+
+Full migration guide: **[English](docs/guide.md#migration-from-telebot)** | **[Русский](docs/guide-ru.md#telebot)**
+
 ## Ecosystem
 
-| Package | Description |
-|---------|-------------|
+| Package                                                      | Description                                                   |
+|--------------------------------------------------------------|---------------------------------------------------------------|
 | [maxigo-client](https://github.com/maxigo-bot/maxigo-client) | Idiomatic Go HTTP client for Max Bot API (zero external deps) |
-| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Bot framework with router, middleware, and context |
+| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot)       | Bot framework with router, middleware, and context            |
 
 ## License
 

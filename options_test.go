@@ -77,4 +77,50 @@ func TestToMessageBody_noReply(t *testing.T) {
 	}
 }
 
+func TestWithKeyboard(t *testing.T) {
+	row := []maxigo.Button{
+		maxigo.NewCallbackButton("Yes", "yes"),
+		maxigo.NewCallbackButton("No", "no"),
+	}
+	cfg := buildSendConfig([]SendOption{WithKeyboard(row)})
+
+	if len(cfg.Attachments) != 1 {
+		t.Fatalf("Attachments count = %d, want 1", len(cfg.Attachments))
+	}
+	if cfg.Attachments[0].Type != "inline_keyboard" {
+		t.Errorf("Attachment type = %q, want %q", cfg.Attachments[0].Type, "inline_keyboard")
+	}
+}
+
+func TestWithKeyboard_multipleRows(t *testing.T) {
+	row1 := []maxigo.Button{maxigo.NewCallbackButton("A", "a")}
+	row2 := []maxigo.Button{maxigo.NewCallbackButton("B", "b")}
+	cfg := buildSendConfig([]SendOption{WithKeyboard(row1, row2)})
+
+	if len(cfg.Attachments) != 1 {
+		t.Fatalf("Attachments count = %d, want 1", len(cfg.Attachments))
+	}
+
+	kb, ok := cfg.Attachments[0].Payload.(maxigo.Keyboard)
+	if !ok {
+		t.Fatalf("Payload is not Keyboard, got %T", cfg.Attachments[0].Payload)
+	}
+	if len(kb.Buttons) != 2 {
+		t.Errorf("Keyboard rows = %d, want 2", len(kb.Buttons))
+	}
+}
+
+func TestWithKeyboard_combinedWithText(t *testing.T) {
+	row := []maxigo.Button{maxigo.NewCallbackButton("OK", "ok")}
+	cfg := buildSendConfig([]SendOption{WithKeyboard(row)})
+
+	body := toMessageBody("Choose:", cfg)
+	if !body.Text.Set || body.Text.Value != "Choose:" {
+		t.Error("Text should be 'Choose:'")
+	}
+	if len(body.Attachments) != 1 {
+		t.Fatalf("Attachments count = %d, want 1", len(body.Attachments))
+	}
+}
+
 func ptr[T any](v T) *T { return &v }

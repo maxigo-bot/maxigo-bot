@@ -168,25 +168,25 @@ b.Handle(maxigobot.OnCallback(""), func(c maxigobot.Context) error {
 
 ### Константы событий
 
-| Константа | Тип обновления | Описание |
-|-----------|----------------|----------|
-| `OnText` | `message_created` | Текстовое сообщение (не команда) |
-| `OnMessage` | `message_created` | Любое сообщение (catch-all) |
-| `OnEdited` | `message_edited` | Сообщение отредактировано |
-| `OnRemoved` | `message_removed` | Сообщение удалено |
-| `OnBotStarted` | `bot_started` | Пользователь нажал Start |
-| `OnBotStopped` | `bot_stopped` | Пользователь остановил бота |
-| `OnBotAdded` | `bot_added` | Бот добавлен в чат |
-| `OnBotRemoved` | `bot_removed` | Бот удалён из чата |
-| `OnUserAdded` | `user_added` | Пользователь добавлен в чат |
-| `OnUserRemoved` | `user_removed` | Пользователь удалён из чата |
-| `OnChatTitleChanged` | `chat_title_changed` | Название чата изменено |
-| `OnChatCreated` | `message_chat_created` | Чат создан через кнопку |
-| `OnDialogMuted` | `dialog_muted` | Диалог замьючен |
-| `OnDialogUnmuted` | `dialog_unmuted` | Диалог размьючен |
-| `OnDialogCleared` | `dialog_cleared` | История диалога очищена |
-| `OnDialogRemoved` | `dialog_removed` | Диалог удалён |
-| `OnCallback("id")` | `message_callback` | Callback с конкретным payload |
+| Константа            | Тип обновления         | Описание                         |
+|----------------------|------------------------|----------------------------------|
+| `OnText`             | `message_created`      | Текстовое сообщение (не команда) |
+| `OnMessage`          | `message_created`      | Любое сообщение (catch-all)      |
+| `OnEdited`           | `message_edited`       | Сообщение отредактировано        |
+| `OnRemoved`          | `message_removed`      | Сообщение удалено                |
+| `OnBotStarted`       | `bot_started`          | Пользователь нажал Start         |
+| `OnBotStopped`       | `bot_stopped`          | Пользователь остановил бота      |
+| `OnBotAdded`         | `bot_added`            | Бот добавлен в чат               |
+| `OnBotRemoved`       | `bot_removed`          | Бот удалён из чата               |
+| `OnUserAdded`        | `user_added`           | Пользователь добавлен в чат      |
+| `OnUserRemoved`      | `user_removed`         | Пользователь удалён из чата      |
+| `OnChatTitleChanged` | `chat_title_changed`   | Название чата изменено           |
+| `OnChatCreated`      | `message_chat_created` | Чат создан через кнопку          |
+| `OnDialogMuted`      | `dialog_muted`         | Диалог замьючен                  |
+| `OnDialogUnmuted`    | `dialog_unmuted`       | Диалог размьючен                 |
+| `OnDialogCleared`    | `dialog_cleared`       | История диалога очищена          |
+| `OnDialogRemoved`    | `dialog_removed`       | Диалог удалён                    |
+| `OnCallback("id")`   | `message_callback`     | Callback с конкретным payload    |
 
 ## Middleware
 
@@ -398,13 +398,13 @@ c.Send("Привет!",
 )
 ```
 
-| Опция | Описание |
-|-------|----------|
-| `WithReplyTo(msgID)` | Ответить на конкретное сообщение |
-| `WithNotify(bool)` | Включить/отключить уведомление для участников чата |
-| `WithFormat(format)` | Формат текста: `maxigo.FormatMarkdown` или `maxigo.FormatHTML` |
-| `WithAttachments(att...)` | Прикрепить файлы, клавиатуры, локации и т.д. |
-| `WithDisableLinkPreview()` | Отключить генерацию превью ссылок |
+| Опция                      | Описание                                                       |
+|----------------------------|----------------------------------------------------------------|
+| `WithReplyTo(msgID)`       | Ответить на конкретное сообщение                               |
+| `WithNotify(bool)`         | Включить/отключить уведомление для участников чата             |
+| `WithFormat(format)`       | Формат текста: `maxigo.FormatMarkdown` или `maxigo.FormatHTML` |
+| `WithAttachments(att...)`  | Прикрепить файлы, клавиатуры, локации и т.д.                   |
+| `WithDisableLinkPreview()` | Отключить генерацию превью ссылок                              |
 
 ### Ответ на callback
 
@@ -530,12 +530,72 @@ func TestBot(t *testing.T) {
 }
 ```
 
+## Telebot
+
+Если вы переходите с [telebot](https://github.com/tucnak/telebot), API покажется знакомым. Вот полная таблица
+соответствия.
+
+### Контекст
+
+| Действие          | Telebot v3                 | maxigo-bot                        |
+|-------------------|----------------------------|-----------------------------------|
+| Отправка          | `c.Send("text")`           | `c.Send("text")`                  |
+| Ответ             | `c.Reply("text")`          | `c.Reply("text")`                 |
+| Редактирование    | `c.Edit("text")`           | `c.Edit("text")`                  |
+| Удаление          | `c.Delete()`               | `c.Delete()`                      |
+| Уведомление       | `c.Notify(tele.Typing)`    | `c.Notify(maxigo.ActionTypingOn)` |
+| Отправитель       | `c.Sender()` → `*User`     | `c.Sender()` → `*maxigo.User`     |
+| Чат               | `c.Chat()` → `*Chat`       | `c.Chat()` → `int64`              |
+| Текст             | `c.Text()`                 | `c.Text()`                        |
+| Аргументы         | `c.Args()`                 | `c.Args()`                        |
+| Данные callback   | `c.Data()`                 | `c.Data()`                        |
+| Ответ на callback | `c.Respond()`              | `c.Respond("")`                   |
+| Алерт             | `c.RespondAlert("text")`   | `c.RespondAlert("text")`          |
+| Хранилище         | `c.Get(k)` / `c.Set(k, v)` | `c.Get(k)` / `c.Set(k, v)`        |
+| Бот               | `c.Bot()`                  | `c.Bot()`                         |
+| Прямой API        | `b.Raw(method, params)`    | `c.API()` → `*maxigo.Client`      |
+
+### Middleware
+
+| Действие       | Telebot v3                     | maxigo-bot                            |
+|----------------|--------------------------------|---------------------------------------|
+| До роутинга    | нет                            | `b.Pre(mw)`                           |
+| После роутинга | `b.Use(mw)`                    | `b.Use(mw)`                           |
+| Группа         | `g := b.Group()`               | `g := b.Group()`                      |
+| Per-handler    | `b.Handle(ep, h, mw)`          | `b.Handle(ep, h, mw)`                 |
+| Recover        | `middleware.Recover()`         | `middleware.Recover()`                |
+| Logger         | `middleware.Logger()`          | `middleware.Logger()`                 |
+| AutoRespond    | `middleware.AutoRespond()`     | `middleware.AutoRespond()`            |
+| Whitelist      | `middleware.Whitelist(ids...)` | `middleware.Whitelist(ids...)`        |
+| Blacklist      | `middleware.Blacklist(ids...)` | `middleware.Blacklist(ids...)`        |
+| Skipper        | нет                            | все middleware поддерживают `Skipper` |
+
+### Send Options
+
+| Действие       | Telebot v3                        | maxigo-bot                                      |
+|----------------|-----------------------------------|-------------------------------------------------|
+| Форматирование | `c.Send("text", tele.ModeHTML)`   | `c.Send("text", WithFormat(maxigo.FormatHTML))` |
+| Клавиатура     | `c.Send("text", &markup)`         | `c.Send("text", WithKeyboard(rows...))`         |
+| Без превью     | `c.Send("text", tele.NoPreview)`  | `c.Send("text", WithDisableLinkPreview())`      |
+| Ответ на       | `&tele.SendOptions{ReplyTo: msg}` | `WithReplyTo(msgID)`                            |
+| Вложения       | встроено в `what interface{}`     | `WithAttachments(att...)`                       |
+
+### Ключевые отличия
+
+|                    | Telebot v3                | maxigo-bot                             |
+|--------------------|---------------------------|----------------------------------------|
+| `Pre()` middleware | нет (всё через `Use`)     | есть — до роутинга                     |
+| Роутинг callback   | `&InlineButton{Unique}`   | `OnCallback("unique")`                 |
+| Send options       | `interface{}`             | типизированные `SendOption` функции    |
+| Payload команд     | `/start payload` (пробел) | `/start:payload` (двоеточие, Max API)  |
+| Config pattern     | нет                       | Echo-style `WithConfig` для middleware |
+
 ## Экосистема
 
-| Пакет | Описание |
-|-------|----------|
+| Пакет                                                        | Описание                                                               |
+|--------------------------------------------------------------|------------------------------------------------------------------------|
 | [maxigo-client](https://github.com/maxigo-bot/maxigo-client) | Идиоматичный Go HTTP-клиент для Max Bot API (без внешних зависимостей) |
-| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Фреймворк для ботов с роутером, middleware и контекстом |
+| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot)       | Фреймворк для ботов с роутером, middleware и контекстом                |
 
 ## Лицензия
 

@@ -75,6 +75,12 @@ func WithDisableLinkPreview() SendOption {
 	}
 }
 
+// WithKeyboard adds an inline keyboard to the message.
+// Each argument is a row of buttons.
+func WithKeyboard(rows ...[]maxigo.Button) SendOption {
+	return WithAttachments(maxigo.NewInlineKeyboardAttachment(rows))
+}
+
 // buildSendConfig merges all send options into a sendConfig.
 func buildSendConfig(opts []SendOption) sendConfig {
 	var cfg sendConfig

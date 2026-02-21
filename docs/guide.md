@@ -58,11 +58,11 @@ b, err := maxigobot.New("TOKEN",
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `WithLongPolling(timeout)` | Set long polling timeout in seconds (default: 30) |
-| `WithClient(client)` | Inject a pre-configured `*maxigo.Client` (useful for testing) |
-| `WithUpdateTypes(types...)` | Filter which update types the poller receives |
+| Option                      | Description                                                   |
+|-----------------------------|---------------------------------------------------------------|
+| `WithLongPolling(timeout)`  | Set long polling timeout in seconds (default: 30)             |
+| `WithClient(client)`        | Inject a pre-configured `*maxigo.Client` (useful for testing) |
+| `WithUpdateTypes(types...)` | Filter which update types the poller receives                 |
 
 ### Accessing the Client
 
@@ -168,25 +168,25 @@ For callbacks:
 
 ### Event Constants
 
-| Constant | Update Type | Description |
-|----------|-------------|-------------|
-| `OnText` | `message_created` | Text message (not a command) |
-| `OnMessage` | `message_created` | Any message (catch-all) |
-| `OnEdited` | `message_edited` | Message edited |
-| `OnRemoved` | `message_removed` | Message removed |
-| `OnBotStarted` | `bot_started` | User pressed Start |
-| `OnBotStopped` | `bot_stopped` | User stopped/blocked bot |
-| `OnBotAdded` | `bot_added` | Bot added to chat |
-| `OnBotRemoved` | `bot_removed` | Bot removed from chat |
-| `OnUserAdded` | `user_added` | User added to chat |
-| `OnUserRemoved` | `user_removed` | User removed from chat |
-| `OnChatTitleChanged` | `chat_title_changed` | Chat title changed |
-| `OnChatCreated` | `message_chat_created` | Chat created via button |
-| `OnDialogMuted` | `dialog_muted` | User muted dialog |
-| `OnDialogUnmuted` | `dialog_unmuted` | User unmuted dialog |
-| `OnDialogCleared` | `dialog_cleared` | User cleared dialog history |
-| `OnDialogRemoved` | `dialog_removed` | User removed dialog |
-| `OnCallback("id")` | `message_callback` | Callback with specific payload |
+| Constant             | Update Type            | Description                    |
+|----------------------|------------------------|--------------------------------|
+| `OnText`             | `message_created`      | Text message (not a command)   |
+| `OnMessage`          | `message_created`      | Any message (catch-all)        |
+| `OnEdited`           | `message_edited`       | Message edited                 |
+| `OnRemoved`          | `message_removed`      | Message removed                |
+| `OnBotStarted`       | `bot_started`          | User pressed Start             |
+| `OnBotStopped`       | `bot_stopped`          | User stopped/blocked bot       |
+| `OnBotAdded`         | `bot_added`            | Bot added to chat              |
+| `OnBotRemoved`       | `bot_removed`          | Bot removed from chat          |
+| `OnUserAdded`        | `user_added`           | User added to chat             |
+| `OnUserRemoved`      | `user_removed`         | User removed from chat         |
+| `OnChatTitleChanged` | `chat_title_changed`   | Chat title changed             |
+| `OnChatCreated`      | `message_chat_created` | Chat created via button        |
+| `OnDialogMuted`      | `dialog_muted`         | User muted dialog              |
+| `OnDialogUnmuted`    | `dialog_unmuted`       | User unmuted dialog            |
+| `OnDialogCleared`    | `dialog_cleared`       | User cleared dialog history    |
+| `OnDialogRemoved`    | `dialog_removed`       | User removed dialog            |
+| `OnCallback("id")`   | `message_callback`     | Callback with specific payload |
 
 ## Middleware
 
@@ -398,13 +398,13 @@ c.Send("Hello!",
 )
 ```
 
-| Option | Description |
-|--------|-------------|
-| `WithReplyTo(msgID)` | Reply to a specific message |
-| `WithNotify(bool)` | Enable/disable notification for chat members |
-| `WithFormat(format)` | Text format: `maxigo.FormatMarkdown` or `maxigo.FormatHTML` |
-| `WithAttachments(att...)` | Attach files, keyboards, locations, etc. |
-| `WithDisableLinkPreview()` | Prevent server from generating link previews |
+| Option                     | Description                                                 |
+|----------------------------|-------------------------------------------------------------|
+| `WithReplyTo(msgID)`       | Reply to a specific message                                 |
+| `WithNotify(bool)`         | Enable/disable notification for chat members                |
+| `WithFormat(format)`       | Text format: `maxigo.FormatMarkdown` or `maxigo.FormatHTML` |
+| `WithAttachments(att...)`  | Attach files, keyboards, locations, etc.                    |
+| `WithDisableLinkPreview()` | Prevent server from generating link previews                |
 
 ### Responding to Callbacks
 
@@ -480,13 +480,13 @@ if errors.As(err, &botErr) {
 
 ### Sentinel Errors
 
-| Error | Cause |
-|-------|-------|
-| `ErrNoChatID` | Update has no chat ID (e.g., trying to `Send` from an event without chat) |
-| `ErrNoMessage` | Update has no message (e.g., trying to `Edit` from a lifecycle hook) |
-| `ErrNoCallback` | Update is not a callback (e.g., trying to `Respond` from a text message) |
-| `ErrNilPhoto` | `SendPhoto` called with nil payload |
-| `ErrAlreadyStarted` | `Start()` called more than once |
+| Error               | Cause                                                                     |
+|---------------------|---------------------------------------------------------------------------|
+| `ErrNoChatID`       | Update has no chat ID (e.g., trying to `Send` from an event without chat) |
+| `ErrNoMessage`      | Update has no message (e.g., trying to `Edit` from a lifecycle hook)      |
+| `ErrNoCallback`     | Update is not a callback (e.g., trying to `Respond` from a text message)  |
+| `ErrNilPhoto`       | `SendPhoto` called with nil payload                                       |
+| `ErrAlreadyStarted` | `Start()` called more than once                                           |
 
 ### Panic Recovery
 
@@ -530,12 +530,71 @@ func TestBot(t *testing.T) {
 }
 ```
 
+## Migration from Telebot
+
+If you're coming from [telebot](https://github.com/tucnak/telebot), the API should feel familiar. Here's a complete mapping.
+
+### Context
+
+| Action        | Telebot v3                 | maxigo-bot                        |
+|---------------|----------------------------|-----------------------------------|
+| Send          | `c.Send("text")`           | `c.Send("text")`                  |
+| Reply         | `c.Reply("text")`          | `c.Reply("text")`                 |
+| Edit          | `c.Edit("text")`           | `c.Edit("text")`                  |
+| Delete        | `c.Delete()`               | `c.Delete()`                      |
+| Notify        | `c.Notify(tele.Typing)`    | `c.Notify(maxigo.ActionTypingOn)` |
+| Sender        | `c.Sender()` → `*User`     | `c.Sender()` → `*maxigo.User`     |
+| Chat          | `c.Chat()` → `*Chat`       | `c.Chat()` → `int64`              |
+| Text          | `c.Text()`                 | `c.Text()`                        |
+| Args          | `c.Args()`                 | `c.Args()`                        |
+| Callback data | `c.Data()`                 | `c.Data()`                        |
+| Respond       | `c.Respond()`              | `c.Respond("")`                   |
+| Alert         | `c.RespondAlert("text")`   | `c.RespondAlert("text")`          |
+| Store         | `c.Get(k)` / `c.Set(k, v)` | `c.Get(k)` / `c.Set(k, v)`        |
+| Bot           | `c.Bot()`                  | `c.Bot()`                         |
+| Direct API    | `b.Raw(method, params)`    | `c.API()` → `*maxigo.Client`      |
+
+### Middleware
+
+| Action       | Telebot v3                     | maxigo-bot                       |
+|--------------|--------------------------------|----------------------------------|
+| Pre-routing  | not available                  | `b.Pre(mw)`                      |
+| Post-routing | `b.Use(mw)`                    | `b.Use(mw)`                      |
+| Group        | `g := b.Group()`               | `g := b.Group()`                 |
+| Per-handler  | `b.Handle(ep, h, mw)`          | `b.Handle(ep, h, mw)`            |
+| Recover      | `middleware.Recover()`         | `middleware.Recover()`           |
+| Logger       | `middleware.Logger()`          | `middleware.Logger()`            |
+| AutoRespond  | `middleware.AutoRespond()`     | `middleware.AutoRespond()`       |
+| Whitelist    | `middleware.Whitelist(ids...)` | `middleware.Whitelist(ids...)`   |
+| Blacklist    | `middleware.Blacklist(ids...)` | `middleware.Blacklist(ids...)`   |
+| Skipper      | not available                  | all middleware support `Skipper` |
+
+### Send Options
+
+| Action      | Telebot v3                        | maxigo-bot                                      |
+|-------------|-----------------------------------|-------------------------------------------------|
+| Parse mode  | `c.Send("text", tele.ModeHTML)`   | `c.Send("text", WithFormat(maxigo.FormatHTML))` |
+| Keyboard    | `c.Send("text", &markup)`         | `c.Send("text", WithKeyboard(rows...))`         |
+| No preview  | `c.Send("text", tele.NoPreview)`  | `c.Send("text", WithDisableLinkPreview())`      |
+| Reply to    | `&tele.SendOptions{ReplyTo: msg}` | `WithReplyTo(msgID)`                            |
+| Attachments | built into `what interface{}`     | `WithAttachments(att...)`                       |
+
+### Key Differences
+
+|                    | Telebot v3                    | maxigo-bot                             |
+|--------------------|-------------------------------|----------------------------------------|
+| `Pre()` middleware | not available (all via `Use`) | available — runs before routing        |
+| Callback routing   | `&InlineButton{Unique}`       | `OnCallback("unique")`                 |
+| Send options       | variadic `interface{}`        | typed `SendOption` functions           |
+| Command payload    | `/start payload` (space)      | `/start:payload` (colon, Max API)      |
+| Config pattern     | none                          | Echo-style `WithConfig` for middleware |
+
 ## Ecosystem
 
-| Package | Description |
-|---------|-------------|
+| Package                                                      | Description                                                   |
+|--------------------------------------------------------------|---------------------------------------------------------------|
 | [maxigo-client](https://github.com/maxigo-bot/maxigo-client) | Idiomatic Go HTTP client for Max Bot API (zero external deps) |
-| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot) | Bot framework with router, middleware, and context |
+| [maxigo-bot](https://github.com/maxigo-bot/maxigo-bot)       | Bot framework with router, middleware, and context            |
 
 ## License
 
