@@ -29,7 +29,8 @@ type Bot struct {
 	wg            sync.WaitGroup
 	ctx           gocontext.Context
 	cancel        gocontext.CancelFunc
-	started       atomic.Bool
+	started atomic.Bool
+	retry   retryConfig
 
 	// OnError is called when a handler returns an error or a panic is recovered.
 	// The Context argument may be nil when a panic is recovered before context is available.
@@ -45,10 +46,13 @@ func New(token string, opts ...Option) (*Bot, error) {
 
 	ctx, cancel := gocontext.WithCancel(gocontext.Background())
 	b := &Bot{
-		handlers: make(map[string]*handlerEntry),
-		stop:     make(chan struct{}),
-		ctx:      ctx,
-		cancel:   cancel,
+		handlers:       make(map[string]*handlerEntry),
+		stop:           make(chan struct{}),
+		ctx:            ctx,
+		cancel:         cancel,
+		retry: retryConfig{
+			uploadRetryIntervals: DefaultUploadRetryIntervals,
+		},
 	}
 
 	for _, opt := range opts {

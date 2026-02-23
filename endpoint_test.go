@@ -29,6 +29,7 @@ func TestEndpointConstants(t *testing.T) {
 	// Verify all constants use \a prefix and don't clash.
 	endpoints := []string{
 		OnText, OnMessage, OnEdited, OnRemoved,
+		OnContact, OnPhoto, OnLocation,
 		OnBotStarted, OnBotStopped, OnBotAdded, OnBotRemoved,
 		OnUserAdded, OnUserRemoved,
 		OnChatTitleChanged, OnChatCreated,

@@ -12,6 +12,18 @@ const (
 	OnRemoved = "\aremoved"
 )
 
+// Attachment-based event endpoints.
+// These take priority over OnText when the message contains a matching attachment.
+// If no handler is registered for the attachment event, routing falls back to OnText → OnMessage.
+const (
+	// OnContact matches message_created updates with a contact attachment.
+	OnContact = "\acontact"
+	// OnPhoto matches message_created updates with an image attachment.
+	OnPhoto = "\aphoto"
+	// OnLocation matches message_created updates with a location attachment.
+	OnLocation = "\alocation"
+)
+
 // Lifecycle hook endpoints.
 const (
 	// OnBotStarted fires when a user presses the Start button.

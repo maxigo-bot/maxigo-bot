@@ -1,6 +1,8 @@
 package maxigobot
 
 import (
+	"time"
+
 	maxigo "github.com/maxigo-bot/maxigo-client"
 )
 
@@ -25,6 +27,25 @@ func WithClient(c *maxigo.Client) Option {
 func WithUpdateTypes(types ...string) Option {
 	return func(b *Bot) {
 		b.updateTypes = types
+	}
+}
+
+// WithRateLimitIntervals configures the retry schedule for HTTP 429 (rate limit) errors.
+// Default: DefaultRateLimitIntervals (4 attempts: 1s, 2s, 5s, 10s).
+// Pass no arguments to disable rate limit retries.
+func WithRateLimitIntervals(intervals ...time.Duration) Option {
+	return func(b *Bot) {
+		b.retry.rateLimitIntervals = intervals
+	}
+}
+
+// WithUploadRetryIntervals configures the retry schedule for "file not processed" errors
+// (HTTP 400 with "not.processed" message, returned when a file is still being processed).
+// Default: DefaultUploadRetryIntervals (4 attempts: 200ms, 500ms, 1s, 2s).
+// Pass no arguments to disable upload retries.
+func WithUploadRetryIntervals(intervals ...time.Duration) Option {
+	return func(b *Bot) {
+		b.retry.uploadRetryIntervals = intervals
 	}
 }
 

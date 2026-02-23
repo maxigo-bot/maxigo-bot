@@ -1,6 +1,7 @@
 package maxigobot
 
 import (
+	"encoding/json"
 	"strings"
 
 	maxigo "github.com/maxigo-bot/maxigo-client"
@@ -24,11 +25,44 @@ func parseCommand(text string) (command, payload string, isCommand bool) {
 	return text, "", true
 }
 
+// attachmentTypeToEndpoint maps raw JSON attachment types to event endpoints.
+var attachmentTypeToEndpoint = map[string]string{
+	"contact":  OnContact,
+	"image":    OnPhoto,
+	"location": OnLocation,
+}
+
+// firstAttachmentType extracts the "type" field from the first raw attachment
+// without fully parsing the attachment. Returns empty string if no attachments
+// or the first attachment cannot be unmarshaled.
+func firstAttachmentType(attachments []json.RawMessage) string {
+	if len(attachments) == 0 {
+		return ""
+	}
+	var header struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(attachments[0], &header); err != nil {
+		return ""
+	}
+	return header.Type
+}
+
+// isAttachmentEndpoint reports whether the endpoint is an attachment-based event.
+func isAttachmentEndpoint(ep string) bool {
+	return ep == OnContact || ep == OnPhoto || ep == OnLocation
+}
+
 // resolveEndpoint determines the endpoint key for a given update.
 // Returns the endpoint string and the concrete update pointer.
 func resolveEndpoint(raw any) (endpoint string, command string, payload string) {
 	switch u := raw.(type) {
 	case *maxigo.MessageCreatedUpdate:
+		// Check attachments first — attachment events take priority.
+		if ep, ok := attachmentTypeToEndpoint[firstAttachmentType(u.Message.Body.Attachments)]; ok {
+			return ep, "", ""
+		}
+
 		if u.Message.Body.Text != nil {
 			cmd, pl, isCmd := parseCommand(*u.Message.Body.Text)
 			if isCmd {
@@ -37,7 +71,7 @@ func resolveEndpoint(raw any) (endpoint string, command string, payload string) 
 			// Has text but not a command.
 			return OnText, "", ""
 		}
-		// No text (photo, sticker, etc.) — route to OnMessage.
+		// No text, no recognized attachment — route to OnMessage.
 		return OnMessage, "", ""
 
 	case *maxigo.MessageCallbackUpdate:
@@ -80,7 +114,9 @@ func resolveEndpoint(raw any) (endpoint string, command string, payload string) 
 }
 
 // findHandler looks up a handler in bot and group registries.
-// For message_created, it tries: exact command → OnText → OnMessage.
+// For message_created, it tries:
+//   - Attachment endpoints: exact match → OnText (if message has text) → OnMessage
+//   - Commands: exact match → OnText → OnMessage
 func (b *Bot) findHandler(endpoint string, update any) (*handlerEntry, []MiddlewareFunc) {
 	// Try exact match in groups first, then bot handlers.
 	if entry, groupMW := b.findInGroups(endpoint); entry != nil {
@@ -90,10 +126,29 @@ func (b *Bot) findHandler(endpoint string, update any) (*handlerEntry, []Middlew
 		return entry, nil
 	}
 
-	// Fallback chain for message_created commands.
-	if _, ok := update.(*maxigo.MessageCreatedUpdate); ok {
+	// Fallback chain for message_created.
+	if u, ok := update.(*maxigo.MessageCreatedUpdate); ok {
+		// Attachment endpoints fall back to OnText (if message has text) → OnMessage.
+		if isAttachmentEndpoint(endpoint) {
+			if u.Message.Body.Text != nil {
+				if entry, groupMW := b.findInGroups(OnText); entry != nil {
+					return entry, groupMW
+				}
+				if entry, ok := b.handlers[OnText]; ok {
+					return entry, nil
+				}
+			}
+			if entry, groupMW := b.findInGroups(OnMessage); entry != nil {
+				return entry, groupMW
+			}
+			if entry, ok := b.handlers[OnMessage]; ok {
+				return entry, nil
+			}
+			return nil, nil
+		}
+
+		// Commands fall back to OnText → OnMessage.
 		if endpoint != OnText && endpoint != OnMessage {
-			// Command not found — try OnText.
 			if entry, groupMW := b.findInGroups(OnText); entry != nil {
 				return entry, groupMW
 			}
@@ -102,7 +157,6 @@ func (b *Bot) findHandler(endpoint string, update any) (*handlerEntry, []Middlew
 			}
 		}
 		if endpoint != OnMessage {
-			// Try OnMessage as catch-all.
 			if entry, groupMW := b.findInGroups(OnMessage); entry != nil {
 				return entry, groupMW
 			}

@@ -234,8 +234,10 @@ func (c *nativeContext) Send(text string, opts ...SendOption) error {
 	}
 	cfg := buildSendConfig(opts)
 	body := toMessageBody(text, cfg)
-	_, err := c.bot.client.SendMessage(c.Ctx(), chatID, body)
-	return err
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.SendMessage(c.Ctx(), chatID, body)
+		return err
+	})
 }
 
 func (c *nativeContext) Reply(text string, opts ...SendOption) error {
@@ -254,8 +256,10 @@ func (c *nativeContext) Edit(text string, opts ...SendOption) error {
 	}
 	cfg := buildSendConfig(opts)
 	body := toMessageBody(text, cfg)
-	_, err := c.bot.client.EditMessage(c.Ctx(), msg.Body.MID, body)
-	return err
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.EditMessage(c.Ctx(), msg.Body.MID, body)
+		return err
+	})
 }
 
 func (c *nativeContext) Delete() error {
@@ -263,8 +267,10 @@ func (c *nativeContext) Delete() error {
 	if msg == nil {
 		return &BotError{Err: ErrNoMessage}
 	}
-	_, err := c.bot.client.DeleteMessage(c.Ctx(), msg.Body.MID)
-	return err
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.DeleteMessage(c.Ctx(), msg.Body.MID)
+		return err
+	})
 }
 
 func (c *nativeContext) SendPhoto(photo *maxigo.PhotoAttachmentRequestPayload, opts ...SendOption) error {
@@ -278,8 +284,10 @@ func (c *nativeContext) SendPhoto(photo *maxigo.PhotoAttachmentRequestPayload, o
 	cfg := buildSendConfig(opts)
 	cfg.Attachments = append(cfg.Attachments, maxigo.NewPhotoAttachment(*photo))
 	body := toMessageBody("", cfg)
-	_, err := c.bot.client.SendMessage(c.Ctx(), chatID, body)
-	return err
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.SendMessage(c.Ctx(), chatID, body)
+		return err
+	})
 }
 
 func (c *nativeContext) Respond(text string) error {
@@ -287,10 +295,12 @@ func (c *nativeContext) Respond(text string) error {
 	if cb == nil {
 		return &BotError{Err: ErrNoCallback}
 	}
-	_, err := c.bot.client.AnswerCallback(c.Ctx(), cb.CallbackID, &maxigo.CallbackAnswer{
-		Notification: maxigo.Some(text),
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.AnswerCallback(c.Ctx(), cb.CallbackID, &maxigo.CallbackAnswer{
+			Notification: maxigo.Some(text),
+		})
+		return err
 	})
-	return err
 }
 
 func (c *nativeContext) RespondAlert(text string) error {
@@ -303,8 +313,10 @@ func (c *nativeContext) Notify(action maxigo.SenderAction) error {
 	if chatID == 0 {
 		return &BotError{Err: ErrNoChatID}
 	}
-	_, err := c.bot.client.SendAction(c.Ctx(), chatID, action)
-	return err
+	return withRetry(c.Ctx(), c.bot.retry, func() error {
+		_, err := c.bot.client.SendAction(c.Ctx(), chatID, action)
+		return err
+	})
 }
 
 func (c *nativeContext) Get(key string) any {

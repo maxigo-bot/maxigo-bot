@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.3.0] - 2026-02-23
+
+### Added
+- **Automatic retry** with separate strategies for different transient API errors:
+  - `WithRateLimitIntervals(...)` — retry schedule for HTTP 429 errors (disabled by default)
+  - `WithUploadRetryIntervals(...)` — retry schedule for "file not processed" errors (enabled by default: 200ms, 500ms, 1s, 2s)
+  - Context-aware: respects cancellation between retries
+- **Attachment-based event routing**: `OnContact`, `OnPhoto`, `OnLocation` events for messages with attachments
+  - Attachment events take priority over `OnText` in routing
+  - Backward-compatible: if no handler is registered, falls back to `OnText` → `OnMessage`
+
 ## [v0.2.0] - 2026-02-21
 
 ### Added
