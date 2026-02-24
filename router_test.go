@@ -383,6 +383,46 @@ func TestFindHandler_attachmentSkipsOnTextWhenNoText(t *testing.T) {
 
 func ptrString(s string) *string { return &s }
 
+func TestFindHandler_attachmentNoHandler(t *testing.T) {
+	b := &Bot{handlers: make(map[string]*handlerEntry)}
+
+	// Attachment endpoint with no handlers at all — should return nil.
+	entry, _ := b.findHandler(OnContact, &maxigo.MessageCreatedUpdate{})
+	if entry != nil {
+		t.Error("should return nil when no handler matches attachment endpoint")
+	}
+}
+
+func TestFindHandler_attachmentGroupFallbackToOnText(t *testing.T) {
+	b := &Bot{handlers: make(map[string]*handlerEntry)}
+
+	g := b.Group()
+	groupTextHandler := &handlerEntry{handler: func(c Context) error { return nil }}
+	g.handlers[OnText] = groupTextHandler
+
+	// OnPhoto not registered, message has text, group has OnText — should fall back to group OnText.
+	entry, _ := b.findHandler(OnPhoto, &maxigo.MessageCreatedUpdate{
+		Message: maxigo.Message{Body: maxigo.MessageBody{Text: ptrString("caption")}},
+	})
+	if entry != groupTextHandler {
+		t.Error("should fall back to group OnText handler for attachment with text")
+	}
+}
+
+func TestFindHandler_attachmentGroupFallbackToOnMessage(t *testing.T) {
+	b := &Bot{handlers: make(map[string]*handlerEntry)}
+
+	g := b.Group()
+	groupMsgHandler := &handlerEntry{handler: func(c Context) error { return nil }}
+	g.handlers[OnMessage] = groupMsgHandler
+
+	// OnLocation not registered, no text, group has OnMessage — should fall back to group OnMessage.
+	entry, _ := b.findHandler(OnLocation, &maxigo.MessageCreatedUpdate{})
+	if entry != groupMsgHandler {
+		t.Error("should fall back to group OnMessage handler for attachment")
+	}
+}
+
 func TestFindHandler_noMatch(t *testing.T) {
 	b := &Bot{handlers: make(map[string]*handlerEntry)}
 

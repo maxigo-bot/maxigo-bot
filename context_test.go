@@ -163,6 +163,33 @@ func TestNativeContext_Text(t *testing.T) {
 	}
 }
 
+func TestNativeContext_Text_noMessage(t *testing.T) {
+	bot := newTestBot()
+	ctx := newTestContext(bot, &maxigo.BotStartedUpdate{})
+	if got := ctx.Text(); got != "" {
+		t.Errorf("Text() = %q, want empty for non-message update", got)
+	}
+}
+
+func TestNativeContext_Args(t *testing.T) {
+	bot := newTestBot()
+
+	t.Run("with payload", func(t *testing.T) {
+		ctx := &nativeContext{bot: bot, payload: "foo bar baz"}
+		args := ctx.Args()
+		if len(args) != 3 || args[0] != "foo" || args[1] != "bar" || args[2] != "baz" {
+			t.Errorf("Args() = %v, want [foo bar baz]", args)
+		}
+	})
+
+	t.Run("empty payload", func(t *testing.T) {
+		ctx := &nativeContext{bot: bot, update: &maxigo.BotStartedUpdate{}}
+		if args := ctx.Args(); args != nil {
+			t.Errorf("Args() = %v, want nil", args)
+		}
+	})
+}
+
 func TestNativeContext_CommandPayload(t *testing.T) {
 	bot := newTestBot()
 

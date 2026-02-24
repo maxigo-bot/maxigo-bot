@@ -68,6 +68,14 @@ func TestNew_withUpdateTypes(t *testing.T) {
 	}
 }
 
+func TestBot_Client(t *testing.T) {
+	c, _ := maxigo.New("test-token")
+	b, _ := New("token", WithClient(c))
+	if b.Client() != c {
+		t.Error("Client() should return the injected client")
+	}
+}
+
 func TestBot_Handle(t *testing.T) {
 	b, _ := New("token")
 	b.Handle("/start", func(c Context) error { return nil })

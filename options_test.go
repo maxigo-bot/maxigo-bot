@@ -2,6 +2,7 @@ package maxigobot
 
 import (
 	"testing"
+	"time"
 
 	maxigo "github.com/maxigo-bot/maxigo-client"
 )
@@ -120,6 +121,49 @@ func TestWithKeyboard_combinedWithText(t *testing.T) {
 	}
 	if len(body.Attachments) != 1 {
 		t.Fatalf("Attachments count = %d, want 1", len(body.Attachments))
+	}
+}
+
+func TestWithRateLimitIntervals(t *testing.T) {
+	b, err := New("token", WithRateLimitIntervals(1*time.Second, 3*time.Second))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(b.retry.rateLimitIntervals) != 2 {
+		t.Errorf("rateLimitIntervals count = %d, want 2", len(b.retry.rateLimitIntervals))
+	}
+	if b.retry.rateLimitIntervals[0] != 1*time.Second {
+		t.Errorf("rateLimitIntervals[0] = %v, want 1s", b.retry.rateLimitIntervals[0])
+	}
+}
+
+func TestWithRateLimitIntervals_disable(t *testing.T) {
+	b, err := New("token", WithRateLimitIntervals())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(b.retry.rateLimitIntervals) != 0 {
+		t.Errorf("rateLimitIntervals should be empty, got %d", len(b.retry.rateLimitIntervals))
+	}
+}
+
+func TestWithUploadRetryIntervals(t *testing.T) {
+	b, err := New("token", WithUploadRetryIntervals(500*time.Millisecond))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(b.retry.uploadRetryIntervals) != 1 {
+		t.Errorf("uploadRetryIntervals count = %d, want 1", len(b.retry.uploadRetryIntervals))
+	}
+}
+
+func TestWithUploadRetryIntervals_disable(t *testing.T) {
+	b, err := New("token", WithUploadRetryIntervals())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(b.retry.uploadRetryIntervals) != 0 {
+		t.Errorf("uploadRetryIntervals should be empty, got %d", len(b.retry.uploadRetryIntervals))
 	}
 }
 
