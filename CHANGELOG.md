@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.3.1] - 2026-04-01
+
+### Fixed
+- Poller errors (poll failures, update parse errors, panics) now route through `OnError` instead of `log.Printf`
+- Error wrapping uses `%w` to preserve error chain for `errors.Is`/`errors.As`
+
 ## [v0.3.0] - 2026-02-23
 
 ### Added

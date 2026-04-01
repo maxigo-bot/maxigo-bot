@@ -33,7 +33,8 @@ type Bot struct {
 	retry   retryConfig
 
 	// OnError is called when a handler returns an error or a panic is recovered.
-	// The Context argument may be nil when a panic is recovered before context is available.
+	// The Context argument may be nil for infrastructure errors (poller failures,
+	// update parse errors) or panics recovered before context is available.
 	// If nil, errors are logged to stderr.
 	OnError func(err error, c Context)
 }
@@ -155,11 +156,7 @@ func (b *Bot) processUpdate(update any) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Errorf("panic recovered: %v\n%s", r, debug.Stack())
-			if b.OnError != nil {
-				b.OnError(err, nil)
-			} else {
-				log.Printf("maxigobot: %v", err)
-			}
+			b.handleError(err, nil, "handler")
 		}
 	}()
 

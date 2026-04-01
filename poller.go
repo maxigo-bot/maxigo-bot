@@ -3,7 +3,7 @@ package maxigobot
 import (
 	gocontext "context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"runtime/debug"
 	"time"
 
@@ -36,7 +36,8 @@ type LongPoller struct {
 func (p *LongPoller) Poll(b *Bot, updates chan<- any, stop chan struct{}) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("maxigobot: panic in poller: %v\n%s", r, debug.Stack())
+			err := fmt.Errorf("panic in poller: %v\n%s", r, debug.Stack())
+			b.handleError(err, nil, "poller")
 		}
 	}()
 	defer close(updates)
@@ -83,7 +84,7 @@ func (p *LongPoller) Poll(b *Bot, updates chan<- any, stop chan struct{}) {
 			if ctx.Err() != nil {
 				return // Shutdown requested, exit gracefully.
 			}
-			log.Printf("maxigobot: poll error (retry in %v): %v", backoff, err)
+			b.handleError(fmt.Errorf("poll error (retry in %v): %w", backoff, err), nil, "poller")
 			timer := time.NewTimer(backoff)
 			select {
 			case <-timer.C:
@@ -103,7 +104,7 @@ func (p *LongPoller) Poll(b *Bot, updates chan<- any, stop chan struct{}) {
 		for _, raw := range list.Updates {
 			upd, err := ParseUpdate(raw)
 			if err != nil {
-				log.Printf("maxigobot: parse update error: %v", err)
+				b.handleError(fmt.Errorf("parse update error: %w", err), nil, "poller")
 				continue
 			}
 			if upd == nil {
