@@ -64,6 +64,60 @@ func TestResolveEndpoint(t *testing.T) {
 			"/start", "start", "hello",
 		},
 		{
+			"tag in dialog",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatDialog},
+					Body:      maxigo.MessageBody{Text: ptrString("@tag /start:")}},
+			},
+			OnText, "", "",
+		},
+		{
+			"only tag — dropped",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id")}},
+			},
+			"", "", "",
+		},
+		{
+			"tag with only whitespace — dropped",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id   ")}},
+			},
+			"", "", "",
+		},
+		{
+			"tag with command",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id /start")}},
+			},
+			"/start", "start", "",
+		},
+		{
+			"tag with extra spaces before command",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id   /start")}},
+			},
+			"/start", "start", "",
+		},
+		{
+			"tag with command and payload",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id /start:hello")}},
+			},
+			"/start", "start", "hello",
+		},
+		{
 			"plain text",
 			&maxigo.MessageCreatedUpdate{
 				Message: maxigo.Message{Body: maxigo.MessageBody{Text: ptrString("hello")}},

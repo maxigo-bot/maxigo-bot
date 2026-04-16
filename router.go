@@ -9,6 +9,7 @@ import (
 
 // parseCommand extracts command name and payload from text.
 // Format: /command:payload → ("command", "payload", true)
+// Group chat format: @bot_id /command:payload → tag stripped, then parsed as above.
 // Non-command text returns ("", "", false).
 func parseCommand(text string) (command, payload string, isCommand bool) {
 	if text == "" || text[0] != '/' {
@@ -64,6 +65,24 @@ func resolveEndpoint(raw any) (endpoint string, command string, payload string) 
 		}
 
 		if u.Message.Body.Text != nil {
+			// There can be any tag received from the dialog.
+			// It can or cannot belong to the bot.
+			// As there is no way to check it on this level let's assume that tag in a dialog is always just a message.
+			// In groups only the tagged messages are sent to the bot.
+			if u.Message.Recipient.ChatType == maxigo.ChatGroup && strings.HasPrefix(*u.Message.Body.Text, "@") {
+				tagEnd := strings.IndexByte(*u.Message.Body.Text, ' ')
+				if tagEnd == -1 {
+					// Tag only, nothing for the bot to process — drop.
+					return "", "", ""
+				}
+
+				// Strip the tag and any extra whitespace.
+				*u.Message.Body.Text = strings.TrimSpace((*u.Message.Body.Text)[tagEnd+1:])
+				if *u.Message.Body.Text == "" {
+					return "", "", ""
+				}
+			}
+
 			cmd, pl, isCmd := parseCommand(*u.Message.Body.Text)
 			if isCmd {
 				return "/" + cmd, cmd, pl
