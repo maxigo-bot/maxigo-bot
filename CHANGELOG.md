@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.0] - 2026-05-02
 
 ### Fixed
 - Commands prefixed with a bot mention in group chats are now routed correctly. Messages like `@bot_id /start` and `@bot_id /start:payload` were previously falling through to `OnText` because the leading `@` prevented command parsing. The router now strips leading `@...` mention tokens in group chats before parsing the command. Multiple consecutive mentions are stripped (e.g. `@someone @bot_id /start`). Mention-only messages (`@bot_id`) are dropped.
