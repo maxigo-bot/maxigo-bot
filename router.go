@@ -25,6 +25,34 @@ func parseCommand(text string) (command, payload string, isCommand bool) {
 	return text, "", true
 }
 
+// StripBotMention removes leading "@..." mention tokens from a group-chat
+// message. In Max group chats users typically address the bot by prefixing a
+// command or message with "@<bot_id>" (the Max client suggests this on the
+// "@" autocomplete). The leading mention is not part of the user's intent and
+// must be stripped before the text is parsed as a command.
+//
+// Multiple consecutive mentions are stripped (e.g. "@a @b /cmd" → "/cmd").
+// In dialogs the text is returned unchanged (chatType != ChatGroup).
+//
+// Returns (cleanedText, true) if at least one mention was stripped;
+// (originalText, false) otherwise. A message consisting solely of mentions
+// returns ("", true).
+func StripBotMention(text string, chatType maxigo.ChatType) (string, bool) {
+	if chatType != maxigo.ChatGroup {
+		return text, false
+	}
+	stripped := false
+	for len(text) > 0 && text[0] == '@' {
+		i := strings.IndexByte(text, ' ')
+		if i == -1 {
+			return "", true
+		}
+		text = strings.TrimLeft(text[i+1:], " ")
+		stripped = true
+	}
+	return text, stripped
+}
+
 // attachmentTypeToEndpoint maps raw JSON attachment types to event endpoints.
 var attachmentTypeToEndpoint = map[string]string{
 	"contact":  OnContact,
@@ -64,7 +92,12 @@ func resolveEndpoint(raw any) (endpoint string, command string, payload string) 
 		}
 
 		if u.Message.Body.Text != nil {
-			cmd, pl, isCmd := parseCommand(*u.Message.Body.Text)
+			text, mention := StripBotMention(*u.Message.Body.Text, u.Message.Recipient.ChatType)
+			if mention && text == "" {
+				// Mention-only message — nothing to route.
+				return "", "", ""
+			}
+			cmd, pl, isCmd := parseCommand(text)
 			if isCmd {
 				return "/" + cmd, cmd, pl
 			}

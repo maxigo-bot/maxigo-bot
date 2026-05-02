@@ -71,6 +71,86 @@ func TestResolveEndpoint(t *testing.T) {
 			OnText, "", "",
 		},
 		{
+			"group: tag with command",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id /start")},
+				},
+			},
+			"/start", "start", "",
+		},
+		{
+			"group: tag with command and payload",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id /start:hello")},
+				},
+			},
+			"/start", "start", "hello",
+		},
+		{
+			"group: tag with extra spaces before command",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id    /start")},
+				},
+			},
+			"/start", "start", "",
+		},
+		{
+			"group: multiple mentions before command",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@someone @bot_id /start")},
+				},
+			},
+			"/start", "start", "",
+		},
+		{
+			"group: tag with plain text",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id hello")},
+				},
+			},
+			OnText, "", "",
+		},
+		{
+			"group: only tag — dropped",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@bot_id")},
+				},
+			},
+			"", "", "",
+		},
+		{
+			"group: only tags — dropped",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+					Body:      maxigo.MessageBody{Text: ptrString("@a @b ")},
+				},
+			},
+			"", "", "",
+		},
+		{
+			"dialog: tag is plain text, not stripped",
+			&maxigo.MessageCreatedUpdate{
+				Message: maxigo.Message{
+					Recipient: maxigo.Recipient{ChatType: maxigo.ChatDialog},
+					Body:      maxigo.MessageBody{Text: ptrString("@someone /start")},
+				},
+			},
+			OnText, "", "",
+		},
+		{
 			"contact attachment with text",
 			&maxigo.MessageCreatedUpdate{
 				Message: maxigo.Message{Body: maxigo.MessageBody{
@@ -248,6 +328,58 @@ func TestResolveEndpoint(t *testing.T) {
 				t.Errorf("payload = %q, want %q", pl, tt.wantPayload)
 			}
 		})
+	}
+}
+
+func TestStripBotMention(t *testing.T) {
+	tests := []struct {
+		name        string
+		text        string
+		chatType    maxigo.ChatType
+		wantText    string
+		wantStripped bool
+	}{
+		{"dialog leaves text unchanged", "@bot_id /start", maxigo.ChatDialog, "@bot_id /start", false},
+		{"channel leaves text unchanged", "@bot_id /start", maxigo.ChatChannel, "@bot_id /start", false},
+		{"group: empty text", "", maxigo.ChatGroup, "", false},
+		{"group: no mention", "hello", maxigo.ChatGroup, "hello", false},
+		{"group: mention only", "@bot_id", maxigo.ChatGroup, "", true},
+		{"group: mention + command", "@bot_id /start", maxigo.ChatGroup, "/start", true},
+		{"group: mention + payload command", "@bot_id /start:hi", maxigo.ChatGroup, "/start:hi", true},
+		{"group: extra spaces after mention", "@bot_id    /start", maxigo.ChatGroup, "/start", true},
+		{"group: multiple mentions", "@a @b /start", maxigo.ChatGroup, "/start", true},
+		{"group: only mentions", "@a @b ", maxigo.ChatGroup, "", true},
+		{"group: mention + plain text", "@bot_id hello world", maxigo.ChatGroup, "hello world", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := StripBotMention(tt.text, tt.chatType)
+			if got != tt.wantText {
+				t.Errorf("text = %q, want %q", got, tt.wantText)
+			}
+			if ok != tt.wantStripped {
+				t.Errorf("stripped = %v, want %v", ok, tt.wantStripped)
+			}
+		})
+	}
+}
+
+func TestResolveEndpoint_doesNotMutateUpdate(t *testing.T) {
+	original := "@bot_id /start:hello"
+	u := &maxigo.MessageCreatedUpdate{
+		Message: maxigo.Message{
+			Recipient: maxigo.Recipient{ChatType: maxigo.ChatGroup},
+			Body:      maxigo.MessageBody{Text: ptrString(original)},
+		},
+	}
+
+	ep, _, _ := resolveEndpoint(u)
+	if ep != "/start" {
+		t.Fatalf("endpoint = %q, want /start", ep)
+	}
+	if got := *u.Message.Body.Text; got != original {
+		t.Errorf("update was mutated: text = %q, want %q", got, original)
 	}
 }
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Commands prefixed with a bot mention in group chats are now routed correctly. Messages like `@bot_id /start` and `@bot_id /start:payload` were previously falling through to `OnText` because the leading `@` prevented command parsing. The router now strips leading `@...` mention tokens in group chats before parsing the command. Multiple consecutive mentions are stripped (e.g. `@someone @bot_id /start`). Mention-only messages (`@bot_id`) are dropped.
+
+### Added
+- `maxigobot.StripBotMention(text, chatType)` — public helper that removes leading `@...` mention tokens from group-chat messages.
+- `middleware.StripBotMention()` — opt-in middleware that mutates the message text in place so that `c.Text()` in `OnText`/`OnMessage` handlers returns the cleaned text. Built-in command routing works without this middleware; install it only when handlers need the clean text.
+
+### Changed
+- Bumped `github.com/maxigo-bot/maxigo-client` from `v0.3.0` to `v0.5.0`. Client adds `WithRetry()` option, `CheckPhoneNumbers`, `SendMessageToPhones`, upload convenience methods (`UploadPhotoFromFile`, `UploadPhotoFromURL`, `UploadMediaFromFile`, `UploadMediaFromURL`), 5 new `ChatAdminPermission` constants, and SSRF/path-traversal hardening for URL uploads. No breaking changes.
+
+### Credits
+- Original report and fix proposal: [@poluvasyan](https://github.com/poluvasyan) ([#1](https://github.com/maxigo-bot/maxigo-bot/pull/1)).
+
 ## [v0.3.1] - 2026-04-01
 
 ### Fixed
