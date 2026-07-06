@@ -16,6 +16,17 @@ func WithLongPolling(timeout int) Option {
 	}
 }
 
+// WithPoller sets a custom update source, e.g. a [WebhookPoller]:
+//
+//	wh := &maxigobot.WebhookPoller{Secret: "s3cret"}
+//	b, err := maxigobot.New(token, maxigobot.WithPoller(wh))
+//	http.Handle("/webhook", wh)
+func WithPoller(p Poller) Option {
+	return func(b *Bot) {
+		b.poller = p
+	}
+}
+
 // WithClient injects a pre-configured maxigo-client (useful for testing).
 func WithClient(c *maxigo.Client) Option {
 	return func(b *Bot) {

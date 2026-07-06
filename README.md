@@ -59,6 +59,7 @@ func main() {
 - Handler groups with isolated middleware stacks
 - Rich `Context` — send, reply, edit, delete, respond to callbacks
 - Long polling with exponential backoff and graceful shutdown
+- Webhook delivery via `WebhookPoller` — secret verification, backpressure, redelivery-friendly
 - Built on [maxigo-client](https://github.com/maxigo-bot/maxigo-client) — zero external transitive dependencies
 - Full Max Bot API update coverage (16 update types)
 
@@ -220,11 +221,51 @@ maxigobot.WithDisableLinkPreview(),
 | `OnDialogRemoved`    | `dialog_removed`       | User removed dialog         |
 | `OnCallback("id")`   | `message_callback`     | Callback with payload       |
 
+## Webhooks
+
+Instead of long polling, updates can be pushed by the Max Bot API to your
+HTTPS endpoint. `WebhookPoller` is both a `Poller` and an `http.Handler` —
+mount it wherever your server lives:
+
+```go
+wh := &maxigobot.WebhookPoller{Secret: "my-secret-phrase"}
+
+b, err := maxigobot.New("TOKEN", maxigobot.WithPoller(wh))
+if err != nil {
+    log.Fatal(err)
+}
+
+http.Handle("/webhook", wh)
+go func() {
+    log.Fatal(http.ListenAndServeTLS(":443", "cert.pem", "key.pem", nil))
+}()
+
+// Register the webhook once (secret comes back in X-Max-Bot-Api-Secret):
+// b.Client().Subscribe(ctx, "https://example.com/webhook", nil, "my-secret-phrase")
+
+b.Start()
+```
+
+How it behaves:
+
+- The `X-Max-Bot-Api-Secret` header is verified in constant time; mismatch → 401.
+- Updates are buffered in an internal queue (`QueueSize`, default 128). When
+  the queue is full or the bot is stopped, the handler replies 503 and the
+  Max Bot API redelivers the update later.
+- Unknown update types are acknowledged with 200 and skipped, same as `LongPoller`.
+- Request bodies are limited by `MaxBodySize` (default 1 MB).
+
+> Since 2026-05-25 the Max Bot API delivers webhooks only to **HTTPS**
+> endpoints with certificates from trusted CAs (including Минцифры);
+> plain HTTP and self-signed certificates are rejected. For local testing use
+> a tunnel with a trusted certificate (ngrok, cloudflared).
+
 ## Options
 
 ```go
 b, err := maxigobot.New("TOKEN",
 maxigobot.WithLongPolling(30), // long polling with 30s timeout
+maxigobot.WithPoller(webhookPoller),         // custom update source (e.g. WebhookPoller)
 maxigobot.WithClient(preConfiguredClient),   // inject maxigo-client
 maxigobot.WithUpdateTypes("message_created", // filter update types
 "message_callback"),

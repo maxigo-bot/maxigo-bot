@@ -61,6 +61,7 @@ b, err := maxigobot.New("TOKEN",
 | Опция | Описание |
 |-------|----------|
 | `WithLongPolling(timeout)` | Таймаут long polling в секундах (по умолчанию: 30) |
+| `WithPoller(p)` | Свой источник обновлений, например `WebhookPoller` |
 | `WithClient(client)` | Инжектировать готовый `*maxigo.Client` (полезно для тестов) |
 | `WithUpdateTypes(types...)` | Фильтровать типы обновлений, которые получает поллер |
 
@@ -72,6 +73,47 @@ b, err := maxigobot.New("TOKEN",
 client := b.Client() // *maxigo.Client
 bot, err := client.GetBot(ctx)
 ```
+
+## Вебхуки
+
+Вместо long polling обновления может доставлять сам Max Bot API — на ваш
+HTTPS-endpoint. `WebhookPoller` реализует одновременно `Poller` и
+`http.Handler`: монтируйте его на свой сервер:
+
+```go
+wh := &maxigobot.WebhookPoller{Secret: "my-secret-phrase"}
+
+b, err := maxigobot.New("TOKEN", maxigobot.WithPoller(wh))
+if err != nil {
+    log.Fatal(err)
+}
+
+http.Handle("/webhook", wh)
+go func() {
+    log.Fatal(http.ListenAndServeTLS(":443", "cert.pem", "key.pem", nil))
+}()
+
+// Зарегистрируйте вебхук один раз (секрет вернётся в заголовке X-Max-Bot-Api-Secret):
+// b.Client().Subscribe(ctx, "https://example.com/webhook", nil, "my-secret-phrase")
+
+b.Start()
+```
+
+Как это работает:
+
+- Заголовок `X-Max-Bot-Api-Secret` сверяется за константное время; при
+  несовпадении — 401.
+- Обновления буферизуются во внутренней очереди (`QueueSize`, по умолчанию
+  128). Если очередь заполнена или бот остановлен, обработчик отвечает 503 —
+  Max Bot API повторит доставку позже.
+- Неизвестные типы обновлений подтверждаются кодом 200 и пропускаются, как
+  в `LongPoller`.
+- Размер тела запроса ограничен `MaxBodySize` (по умолчанию 1 МБ).
+
+> С 25 мая 2026 Max Bot API доставляет вебхуки только на **HTTPS** с
+> сертификатом доверенного ЦС (включая Минцифры); HTTP и самоподписные
+> сертификаты не поддерживаются. Для локальной отладки используйте туннель
+> с доверенным сертификатом (ngrok, cloudflared).
 
 ## Роутинг
 

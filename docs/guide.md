@@ -61,6 +61,7 @@ b, err := maxigobot.New("TOKEN",
 | Option                      | Description                                                   |
 |-----------------------------|---------------------------------------------------------------|
 | `WithLongPolling(timeout)`  | Set long polling timeout in seconds (default: 30)             |
+| `WithPoller(p)`             | Custom update source, e.g. `WebhookPoller`                    |
 | `WithClient(client)`        | Inject a pre-configured `*maxigo.Client` (useful for testing) |
 | `WithUpdateTypes(types...)` | Filter which update types the poller receives                 |
 
@@ -72,6 +73,47 @@ If you need to make direct API calls:
 client := b.Client() // *maxigo.Client
 bot, err := client.GetBot(ctx)
 ```
+
+## Webhooks
+
+Instead of long polling, the Max Bot API can push updates to your HTTPS
+endpoint. `WebhookPoller` implements both `Poller` and `http.Handler` —
+mount it on your own server:
+
+```go
+wh := &maxigobot.WebhookPoller{Secret: "my-secret-phrase"}
+
+b, err := maxigobot.New("TOKEN", maxigobot.WithPoller(wh))
+if err != nil {
+    log.Fatal(err)
+}
+
+http.Handle("/webhook", wh)
+go func() {
+    log.Fatal(http.ListenAndServeTLS(":443", "cert.pem", "key.pem", nil))
+}()
+
+// Register the webhook once (the secret comes back in X-Max-Bot-Api-Secret):
+// b.Client().Subscribe(ctx, "https://example.com/webhook", nil, "my-secret-phrase")
+
+b.Start()
+```
+
+How it behaves:
+
+- The `X-Max-Bot-Api-Secret` header is verified in constant time; a mismatch
+  yields 401.
+- Updates are buffered in an internal queue (`QueueSize`, default 128). When
+  the queue is full or the bot is stopped, the handler replies 503 and the
+  Max Bot API redelivers the update later.
+- Unknown update types are acknowledged with 200 and skipped, same as
+  `LongPoller`.
+- Request bodies are limited by `MaxBodySize` (default 1 MB).
+
+> Since 2026-05-25 the Max Bot API delivers webhooks only to **HTTPS**
+> endpoints with certificates from trusted CAs (including Минцифры); plain
+> HTTP and self-signed certificates are rejected. For local testing use a
+> tunnel with a trusted certificate (ngrok, cloudflared).
 
 ## Routing
 
